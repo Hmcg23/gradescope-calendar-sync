@@ -32,9 +32,16 @@ npm install
 npm run id -- --write
 ```
 
-This writes `.keys/extension.pem` (gitignored) and patches `manifest.json`. It prints a 32-character
-**Item ID** — keep it for step 4. Without this, an unpacked extension's ID changes and Google
-sign-in breaks.
+This patches `manifest.json` and prints a 32-character **Item ID** — keep it for step 4. Without a
+pinned key, an unpacked extension's ID changes between machines and Google sign-in breaks.
+
+The private key is written to `~/Documents/gradescope-calendar-sync-key/extension.pem`, deliberately
+**outside this folder**: Chrome scans a loaded extension directory and warns about any `.pem` it
+finds inside one. Override the location with `GS_EXT_KEY=/path/to/key.pem`. The key is only needed
+if you later pack a `.crx`; the unpacked extension runs from the public `"key"` in the manifest.
+
+Re-running the command is safe — once `manifest.json` has a key it just reports the ID. Only
+`--force` mints a new one, which changes the extension ID and breaks the OAuth client.
 
 ### 2. Enable the Calendar API
 
