@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>Gradescope → Calendar</title>
+  </head>
+  <body>
+    <header>
+      <h1>Gradescope → Calendar</h1>
+      <span id="dot" class="dot" title="status"></span>
+    </header>
+
+    <p id="status" class="status">Loading…</p>
+
+    <div id="banner" class="banner" hidden>
+      <p id="bannerText"></p>
+      <button id="bannerAction" class="link" type="button"></button>
+    </div>
+
+    <dl id="counts" class="counts" hidden>
+      <div><dt>Deadlines</dt><dd id="cAssignments">—</dd></div>
+      <div><dt>Courses</dt><dd id="cCourses">—</dd></div>
+      <div><dt>Changed</dt><dd id="cChanged">—</dd></div>
+    </dl>
+
+    <button id="sync" class="primary" type="button">Sync now</button>
+    <button id="connect" class="primary" type="button" hidden>Connect Google Calendar</button>
+
+    <footer>
+      <button id="options" class="link" type="button">Settings</button>
+      <span id="next" class="muted"></span>
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

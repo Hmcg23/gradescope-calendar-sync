@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "Gradescope → Calendar",
+  "version": "1.0.0",
+  "description": "Mirrors your Gradescope assignment deadlines into a dedicated Google Calendar, once a day.",
+  "minimum_chrome_version": "116",
+
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmYCv0lPX89OjdGeCofZWk+HuBMooCKRxDPWi0ZfARAA+pjH6h2qzoBP25JtXBBSX8n2rQB5iAnS75uoXD69e7pu2+7YHsXc4kG/eOAipBY7Xy11DFLAJTn2EjwxtBMEZxgiYeIrH3QsQjHPGQsk0fiutfLeE4NvrL/1gd4JgwxoIFBUzgSHyGL87tewXidYsoTfj/m17itdKE1wYF4ZhRh+6904XDDEDZvYFz8w98NRivbVtYlbfgQUe2gDFiXojZQqEkHEXv/5sDB0mq8U3dXS5eltZf0zkM03AYv1a7fqO/ki6Fxwz8Kd2CPulhN8jrKj+uYWJYQ6yEuGXwdDsMQIDAQAB",
+
+  "oauth2": {
+    "client_id": "REPLACE_WITH_CHROME_EXTENSION_OAUTH_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/calendar.app.created"]
+  },
+
+  "permissions": ["storage", "alarms", "scripting", "identity", "notifications", "tabs"],
+  "host_permissions": ["https://www.gradescope.com/*"],
+
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "Gradescope → Calendar",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "options_page": "src/options.html",
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["src/parse.js"],
+      "matches": ["https://www.gradescope.com/*"]
+    }
+  ]
+}

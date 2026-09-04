@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>Gradescope → Calendar settings</title>
+    <style>
+      body { width: auto; max-width: 640px; padding: 26px; }
+      h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 26px 0 8px; }
+      label.row { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; }
+      label.row input { margin-top: 2px; }
+      .hint { color: var(--muted); font-size: 12px; margin: 2px 0 0; }
+      select, input[type="text"] { font: inherit; padding: 5px 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--fg); }
+      .courses { border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; }
+      .danger { color: var(--err); }
+      #saved { color: var(--ok); margin-left: 10px; }
+    </style>
+  </head>
+  <body>
+    <header><h1>Gradescope → Calendar</h1></header>
+
+    <h2>What gets synced</h2>
+    <label class="row"><input type="checkbox" id="skipSubmitted" /><span>Hide assignments I have already submitted<p class="hint">Their events are removed from the calendar on the next sync.</p></span></label>
+    <label class="row"><input type="checkbox" id="skipPast" /><span>Hide deadlines that have already passed<p class="hint">Today's deadlines always stay visible.</p></span></label>
+    <label class="row"><input type="checkbox" id="shiftMidnight" /><span>Treat a midnight deadline as the night before<p class="hint">A 12:00am Saturday deadline shows on Friday, which is when you actually have to finish it.</p></span></label>
+
+    <h2>Reminders</h2>
+    <label class="row"><span>Notify me
+      <select id="reminderMinutes">
+        <option value="">Use my calendar's default</option>
+        <option value="540">9am on the due date</option>
+        <option value="900">9am the day before</option>
+        <option value="1260">5pm the day before</option>
+        <option value="2340">9am two days before</option>
+        <option value="none">No reminder</option>
+      </select>
+    </span></label>
+
+    <h2>Courses</h2>
+    <div class="courses" id="courses"><p class="hint">Run a sync to discover your courses.</p></div>
+
+    <h2>Calendar</h2>
+    <label class="row"><span>Calendar name <input type="text" id="calendarName" /><p class="hint">Only used when the calendar is first created.</p></span></label>
+
+    <h2>Troubleshooting</h2>
+    <label class="row"><input type="checkbox" id="dryRun" /><span>Dry run<p class="hint">Log what would change to the service worker console without writing anything.</p></span></label>
+    <label class="row"><input type="checkbox" id="debugDumpHtml" /><span>Dump scraped HTML to the console<p class="hint">Use this to capture fresh test fixtures if Gradescope changes its markup.</p></span></label>
+
+    <p>
+      <button id="reset" class="link danger" type="button">Forget synced events</button>
+      <span class="hint">Leaves calendar events in place; the next sync re-adopts them by id.</span>
+    </p>
+    <p>
+      <button id="disconnect" class="link danger" type="button">Disconnect Google account</button>
+    </p>
+
+    <p><span id="saved"></span></p>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
