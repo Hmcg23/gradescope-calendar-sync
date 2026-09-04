@@ -1,4 +1,7 @@
 /**
+ * Template. Copy to src/config.js and fill in — config.js is gitignored so the secret
+ * never enters git history.
+ *
  * Google OAuth credentials.
  *
  * These belong to a "Web application" OAuth client whose authorised redirect URI is

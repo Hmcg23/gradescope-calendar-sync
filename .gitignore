@@ -2,3 +2,6 @@ node_modules/
 .keys/
 *.pem
 .DS_Store
+
+# holds the OAuth client secret — copy from src/config.example.js
+src/config.js

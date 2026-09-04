@@ -22,7 +22,8 @@ for (const f of new Set(files)) {
 }
 
 if (String(m.key).startsWith('REPLACE')) blocking.push('manifest "key" not generated — run: npm run id -- --write');
-const config = readFileSync('src/config.js', 'utf8');
+if (!existsSync('src/config.js')) blocking.push('src/config.js is missing — copy src/config.example.js and fill in the OAuth client (README step 4)');
+const config = existsSync('src/config.js') ? readFileSync('src/config.js', 'utf8') : '';
 for (const name of ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET']) {
   const value = config.match(new RegExp(`${name} = '([^']*)'`))?.[1] ?? '';
   if (value.startsWith('REPLACE')) problems.push(`${name} in src/config.js is still a placeholder — Google sign-in will fail until you set it (README step 4)`);

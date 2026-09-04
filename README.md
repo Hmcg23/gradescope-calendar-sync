@@ -85,15 +85,20 @@ Not "Chrome Extension": that type only works with `chrome.identity.getAuthToken`
 Chrome-exclusive and fails in Arc, Brave and Edge. This extension uses `launchWebAuthFlow`, which
 needs a web client and the `chromiumapp.org` redirect.
 
-Paste both values into `src/config.js`:
+Copy the template, then paste both values into it:
+
+```bash
+cp src/config.example.js src/config.js
+```
 
 ```js
 export const GOOGLE_CLIENT_ID = '…apps.googleusercontent.com';
 export const GOOGLE_CLIENT_SECRET = 'GOCSPX-…';
 ```
 
-That secret ships inside the extension. See the comment at the top of `src/config.js` for why that
-is acceptable for a public client and what it does and does not expose.
+`src/config.js` is gitignored, so the secret stays out of git history even if this repo is ever made
+public. It does still ship inside the loaded extension — see the comment at the top of the file for
+why that is acceptable for a public OAuth client, and what it does and does not expose.
 
 Then confirm nothing is missing:
 
