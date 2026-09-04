@@ -6,6 +6,10 @@ events. No password is stored anywhere.
 
 Built and verified on **Arc**; the same build works in Chrome, Brave and Edge.
 
+Gradescope has no public API, no ICS export and no calendar integration, so this scrapes your own
+pages using the browser session you are already signed into. Setup needs a free Google Cloud project
+of your own (steps below, ~10 minutes); there is no shared backend and no account to sign up for.
+
 ## How it works
 
 An MV3 service worker cannot read Gradescope directly: its `fetch` calls come from the
@@ -245,3 +249,14 @@ You will see a "course page could not be read" warning rather than deleted event
 - The refresh token is stored in `chrome.storage.local`, unencrypted like all extension storage.
 - Unofficial scraping of your own pages, ~1 request/second, once a day. Gradescope could change
   its markup at any time.
+- Not affiliated with or endorsed by Gradescope or Google.
+
+## Contributing
+
+Issues and PRs welcome. `npm run check` must pass. Parser changes should come with a fixture in
+`tests/fixtures/` captured from a real course page — my own fixtures are synthetic, so real-world
+markup from other schools is the most useful thing anyone can contribute.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
