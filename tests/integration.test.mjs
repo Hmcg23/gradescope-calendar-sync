@@ -133,3 +133,42 @@ test('dry run reports a plan without touching the calendar', async () => {
   assert.deepEqual(new Set(cal.state.events.keys()), before, 'nothing written');
   assert.equal(cal.log.filter((l) => /events/.test(l)).length, 0);
 });
+
+test('the user consents exactly once, then tokens refresh silently', async () => {
+  // The first sync above ran the interactive flow.
+  assert.equal(ctx.calls.authFlows.length, 1, 'one consent window, at the first sync');
+  assert.match(ctx.calls.authFlows[0], /accounts\.google\.com/);
+
+  const first = cal.tokenGrants[0];
+  assert.equal(first.grant_type, 'authorization_code');
+  assert.ok(first.code_verifier, 'PKCE verifier accompanies the exchange');
+  assert.equal(first.redirect_uri, 'https://testextensionid.chromiumapp.org/');
+
+  const stored = (await chrome.storage.local.get('googleAuth')).googleAuth;
+  assert.equal(stored.refreshToken, 'fake-refresh-token', 'refresh token is persisted');
+
+  // Later syncs reused the cached access token rather than re-hitting Google.
+  assert.equal(cal.tokenGrants.length, 1, 'no redundant token calls while the token is valid');
+
+  // Expire it, the way a real hour-old token would be.
+  await chrome.storage.local.set({ googleAuth: { ...stored, expiresAt: Date.now() - 1000 } });
+  await chrome.storage.local.set({ settings: { ...(await chrome.storage.local.get('settings')).settings, dryRun: false } });
+
+  scrapePayload = await scrapeFrom([{ id: '2', name: 'Lab 3', inDays: 3 }]);
+  const res = await runSync({ interactive: false, trigger: 'test' });
+
+  assert.equal(res.ok, true, res.error);
+  assert.equal(ctx.calls.authFlows.length, 1, 'a background sync must never pop a consent window');
+  assert.equal(cal.tokenGrants.at(-1).grant_type, 'refresh_token', 'it refreshed instead');
+});
+
+test('a revoked refresh token fails the background sync instead of hanging on a prompt', async () => {
+  await chrome.storage.local.remove('googleAuth');
+  scrapePayload = await scrapeFrom([{ id: '2', name: 'Lab 3', inDays: 3 }]);
+
+  const res = await runSync({ interactive: false, trigger: 'test' });
+  assert.equal(res.ok, false);
+  assert.equal(res.error, 'google-auth-required');
+  assert.equal(ctx.calls.authFlows.length, 1, 'still no surprise popup');
+  assert.ok(ctx.calls.notifications.some((n) => /reconnect/i.test(n.title)), 'it tells the user instead');
+});

@@ -22,8 +22,15 @@ for (const f of new Set(files)) {
 }
 
 if (String(m.key).startsWith('REPLACE')) blocking.push('manifest "key" not generated — run: npm run id -- --write');
-if (String(m.oauth2?.client_id).startsWith('REPLACE')) problems.push('oauth2.client_id is still a placeholder — Google sign-in will fail until you set it (README step 4)');
-if (!m.permissions?.includes('identity')) blocking.push('the "identity" permission is required by oauth2');
+const config = readFileSync('src/config.js', 'utf8');
+for (const name of ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET']) {
+  const value = config.match(new RegExp(`${name} = '([^']*)'`))?.[1] ?? '';
+  if (value.startsWith('REPLACE')) problems.push(`${name} in src/config.js is still a placeholder — Google sign-in will fail until you set it (README step 4)`);
+}
+if (!m.permissions?.includes('identity')) blocking.push('the "identity" permission is required by launchWebAuthFlow');
+for (const host of ['https://oauth2.googleapis.com/*', 'https://www.googleapis.com/*']) {
+  if (!m.host_permissions?.includes(host)) blocking.push(`missing host permission ${host} (token exchange / Calendar API)`);
+}
 if (!m.host_permissions?.some((h) => h.includes('gradescope.com'))) blocking.push('missing gradescope.com host permission');
 if (!(m.web_accessible_resources ?? []).some((w) => w.resources.includes('src/parse.js'))) blocking.push('src/parse.js must be web-accessible; the content script imports it');
 

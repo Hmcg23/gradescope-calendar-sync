@@ -7,13 +7,13 @@
 
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmYCv0lPX89OjdGeCofZWk+HuBMooCKRxDPWi0ZfARAA+pjH6h2qzoBP25JtXBBSX8n2rQB5iAnS75uoXD69e7pu2+7YHsXc4kG/eOAipBY7Xy11DFLAJTn2EjwxtBMEZxgiYeIrH3QsQjHPGQsk0fiutfLeE4NvrL/1gd4JgwxoIFBUzgSHyGL87tewXidYsoTfj/m17itdKE1wYF4ZhRh+6904XDDEDZvYFz8w98NRivbVtYlbfgQUe2gDFiXojZQqEkHEXv/5sDB0mq8U3dXS5eltZf0zkM03AYv1a7fqO/ki6Fxwz8Kd2CPulhN8jrKj+uYWJYQ6yEuGXwdDsMQIDAQAB",
 
-  "oauth2": {
-    "client_id": "315618860559-mre7jifnlrov050006ukv817tb8ovt96.apps.googleusercontent.com",
-    "scopes": ["https://www.googleapis.com/auth/calendar.app.created"]
-  },
 
   "permissions": ["storage", "alarms", "scripting", "identity", "notifications", "tabs"],
-  "host_permissions": ["https://www.gradescope.com/*"],
+  "host_permissions": [
+    "https://www.gradescope.com/*",
+    "https://www.googleapis.com/*",
+    "https://oauth2.googleapis.com/*"
+  ],
 
   "background": {
     "service_worker": "src/background.js",

@@ -1,6 +1,6 @@
 # Gradescope → Calendar
 
-A Chrome extension that mirrors your Gradescope assignment deadlines into a dedicated
+A browser extension (Chrome, Arc, Brave, Edge) that mirrors your Gradescope assignment deadlines into a dedicated
 **Gradescope** Google Calendar, once a day. Unsubmitted, not-yet-past assignments become all-day
 events. No password is stored anywhere.
 
@@ -12,6 +12,10 @@ never attached. So once a day the extension opens an inactive `gradescope.com/ac
 `src/scrape.js`, and does all reading **same-origin inside that tab** — riding the session you are
 already logged into. The tab closes itself. The scraped assignments are diffed against what was
 written last time and only the differences hit the Calendar API.
+
+Google auth is `chrome.identity.launchWebAuthFlow` with authorization code + PKCE, and the refresh
+token is kept in extension storage. The simpler `getAuthToken` was the original design, but it reads
+the Google account from the Chrome profile and therefore fails outright in Arc and Brave.
 
 Two design rules are load-bearing:
 
@@ -74,14 +78,22 @@ you will see an "unverified app" screen at sign-in — click **Advanced → Cont
 
 **Google Auth Platform → Clients → Create client**
 
-- Application type: **Chrome Extension**
-- Item ID: the ID printed in step 1
+- Application type: **Web application**
+- Authorised redirect URI: `https://<extension-id>.chromiumapp.org/` — using the ID from step 1
 
-Paste the resulting client ID into `manifest.json`:
+Not "Chrome Extension": that type only works with `chrome.identity.getAuthToken`, which is
+Chrome-exclusive and fails in Arc, Brave and Edge. This extension uses `launchWebAuthFlow`, which
+needs a web client and the `chromiumapp.org` redirect.
 
-```json
-"oauth2": { "client_id": "…apps.googleusercontent.com", "scopes": ["https://www.googleapis.com/auth/calendar.app.created"] }
+Paste both values into `src/config.js`:
+
+```js
+export const GOOGLE_CLIENT_ID = '…apps.googleusercontent.com';
+export const GOOGLE_CLIENT_SECRET = 'GOCSPX-…';
 ```
+
+That secret ships inside the extension. See the comment at the top of `src/config.js` for why that
+is acceptable for a public client and what it does and does not expose.
 
 Then confirm nothing is missing:
 
@@ -117,7 +129,7 @@ Right-click the icon → Options.
 ## Development
 
 ```bash
-npm test        # parsers + diff engine, 17 tests, no browser needed
+npm test        # parsers, PKCE, diff engine, end-to-end sync — 29 tests, no browser needed
 npm run check   # manifest validation + tests
 ```
 
@@ -136,9 +148,9 @@ You will see a "course page could not be read" warning rather than deleted event
 
 ## Limitations
 
-- **Chrome only.** `chrome.identity.getAuthToken` is Chrome-specific; Firefox and Brave would need
-  `launchWebAuthFlow` instead.
-- Syncs when Chrome is running. A missed daily alarm fires on the next launch.
-- `getAuthToken` uses the Google account signed into this Chrome profile.
+- **Chromium browsers only** — Chrome, Arc, Brave, Edge. Firefox implements `launchWebAuthFlow`
+  too but not MV3 service workers the same way, so it is untested there.
+- Syncs when the browser is running. A missed daily alarm fires on the next launch.
+- The refresh token is stored in `chrome.storage.local`, unencrypted like all extension storage.
 - Unofficial scraping of your own pages, ~1 request/second, once a day. Gradescope could change
   its markup at any time.

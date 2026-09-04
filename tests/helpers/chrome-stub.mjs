@@ -6,7 +6,7 @@
 export function installChromeStub({ scrapeResultFor }) {
   const store = {};
   const listeners = { message: [], alarm: [], installed: [], startup: [], tabUpdated: [] };
-  const calls = { tabsCreated: 0, tabsRemoved: 0, injected: 0, notifications: [], activated: [] };
+  const calls = { tabsCreated: 0, tabsRemoved: 0, injected: 0, notifications: [], activated: [], authFlows: [] };
 
   let nextTabId = 100;
 
@@ -31,6 +31,9 @@ export function installChromeStub({ scrapeResultFor }) {
         },
         async set(patch) {
           Object.assign(store, structuredClone(patch));
+        },
+        async remove(keys) {
+          for (const k of Array.isArray(keys) ? keys : [keys]) delete store[k];
         },
       },
     },
@@ -76,9 +79,11 @@ export function installChromeStub({ scrapeResultFor }) {
       },
     },
     identity: {
-      getAuthToken: (_opts, cb) => cb('fake-token'),
-      removeCachedAuthToken: (_o, cb) => cb(),
-      clearAllCachedAuthTokens: (cb) => cb(),
+      getRedirectURL: () => 'https://testextensionid.chromiumapp.org/',
+      launchWebAuthFlow: ({ url }, cb) => {
+        calls.authFlows.push(url);
+        cb('https://testextensionid.chromiumapp.org/?code=fake-auth-code');
+      },
     },
     notifications: {
       create: (opts) => calls.notifications.push(opts),
@@ -97,9 +102,33 @@ export function installChromeStub({ scrapeResultFor }) {
 export function installFakeCalendar() {
   const state = { calendars: new Map(), events: new Map() };
   const log = [];
+  const tokenGrants = [];
 
   globalThis.fetch = async (url, opts = {}) => {
     const method = opts.method ?? 'GET';
+
+    if (String(url).startsWith('https://oauth2.googleapis.com/token')) {
+      const form = new URLSearchParams(opts.body);
+      log.push(`POST /token (${form.get('grant_type')})`);
+      tokenGrants.push(Object.fromEntries(form));
+      return {
+        ok: true,
+        status: 200,
+        text: async () =>
+          JSON.stringify({
+            access_token: `access-${tokenGrants.length}`,
+            expires_in: 3600,
+            ...(form.get('grant_type') === 'authorization_code'
+              ? { refresh_token: 'fake-refresh-token' }
+              : {}),
+          }),
+      };
+    }
+    if (String(url).startsWith('https://oauth2.googleapis.com/revoke')) {
+      log.push('POST /revoke');
+      return { ok: true, status: 200, text: async () => '{}' };
+    }
+
     const path = String(url).replace('https://www.googleapis.com/calendar/v3', '');
     log.push(`${method} ${path}`);
     const body = opts.body ? JSON.parse(opts.body) : null;
@@ -144,7 +173,7 @@ export function installFakeCalendar() {
     return json(500, { error: `unhandled ${method} ${path}` });
   };
 
-  return { state, log };
+  return { state, log, tokenGrants };
 }
 
 /** Builds a course page with deadlines relative to now, so tests never rot. */
