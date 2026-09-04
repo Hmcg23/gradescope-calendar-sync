@@ -1,8 +1,10 @@
 # Gradescope → Calendar
 
-A browser extension (Chrome, Arc, Brave, Edge) that mirrors your Gradescope assignment deadlines into a dedicated
+A browser extension that mirrors your Gradescope assignment deadlines into a dedicated
 **Gradescope** Google Calendar, once a day. Unsubmitted, not-yet-past assignments become all-day
 events. No password is stored anywhere.
+
+Built and verified on **Arc**; the same build works in Chrome, Brave and Edge.
 
 ## How it works
 
@@ -108,12 +110,38 @@ npm run check
 
 ### 5. Load it
 
-`chrome://extensions` → enable **Developer mode** → **Load unpacked** → select this folder.
-Confirm the ID shown matches step 1.
+In your browser (Chrome, Arc, Brave or Edge) go to `chrome://extensions` → turn on **Developer
+mode** (top right) → **Load unpacked**.
+
+In the file picker, select the **folder itself**, not a file inside it. In macOS's picker the
+fastest route is ⌘⇧G, paste the folder path, Enter, then **Select**. If you get "Manifest file is
+missing or unreadable", you picked the wrong level — the folder you choose must be the one
+containing `manifest.json`.
+
+Confirm the ID on the extension's tile matches step 1. If it differs, the manifest `key` is missing
+and the OAuth client will reject you.
+
+Pin it: puzzle-piece icon in the toolbar → pin **Gradescope → Calendar**.
+
+**After any change to `manifest.json` or `src/config.js`, click the reload arrow on that tile.**
+The browser caches both, so edits do nothing until you reload — this is the single most common
+reason a fix appears not to work.
 
 ### 6. First sync
 
-Click the toolbar icon → **Connect Google Calendar** → consent → **Sync now**.
+Click the toolbar icon → **Connect Google Calendar**. Pick your account → "Google hasn't verified
+this app" → **Advanced** → **Continue** → the consent screen should read *"See, create, and change
+events on Google calendars you create with this app"* → **Allow**.
+
+That wording is worth reading: it confirms the narrow scope, and that the extension cannot see your
+existing calendars.
+
+Then do a dry run before letting it write anything: Options → tick **Dry run** → **Sync now** →
+open the service worker console (`chrome://extensions` → your tile → the blue **service worker**
+link → **Console**) and read the `[gs-sync] DRY RUN` block. Check the course count and assignment
+names. Untick **Dry run**, **Sync now** again.
+
+You will see a Gradescope tab flash open and close on each sync. That is the scrape.
 
 This creates a **Gradescope** calendar and writes your deadlines into it.
 
@@ -125,6 +153,56 @@ own. Not a trade worth making for one click.
 Open the extension's Options page, copy the calendar ID shown under **Calendar**, then in Google
 Calendar: **Other calendars → + → Subscribe to calendar** → paste the ID. It stays visible from then
 on, separate from your primary calendar and independently toggleable.
+
+## Troubleshooting
+
+Every one of these was hit while getting this running, so they are worth listing verbatim.
+
+**"This extension includes the key file '…/extension.pem'. You probably don't want to do that."**
+The signing key is inside the loaded folder. It belongs outside — see step 1. Warning only; the
+extension still runs.
+
+**"Access blocked: … request is invalid" / `Error 400: invalid_request`**
+The OAuth client is the wrong type. A **Desktop app** client cannot be used this way; Google
+disallowed custom URI schemes for them in October 2023. Create a **Web application** client (step 4).
+
+**Sign-in does nothing at all, popup stays on "Not connected"**
+You are on a Chromium browser that is not Chrome, and something is still calling
+`chrome.identity.getAuthToken` — which only exists in Chrome, because it reads the account from the
+Chrome profile. This project uses `launchWebAuthFlow` precisely to avoid that.
+
+**`redirect_uri_mismatch`**
+The URI registered on the client must match `chrome.identity.getRedirectURL()` exactly, including
+the trailing slash: `https://<extension-id>.chromiumapp.org/`
+
+**`invalid_client`**
+`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `src/config.js` do not match the client, or the
+extension was not reloaded after editing them.
+
+**"Sync failed" immediately after installing**
+The daily alarm fires a minute after install, before you have connected Google. Expected. It clears
+on the first successful sync.
+
+**Popup says synced, but there is no calendar in Google Calendar**
+Almost certainly the missing subscribe step — see step 6. To confirm the events really exist, paste
+this into the service worker console:
+
+```js
+(async () => {
+  const { googleAuth, calendarId } = await chrome.storage.local.get(['googleAuth','calendarId']);
+  const r = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
+    { headers: { Authorization: `Bearer ${googleAuth.accessToken}` } });
+  console.log((await r.json()).items?.map(e => `${e.start?.date}  ${e.summary}`));
+})()
+```
+
+If that lists your assignments, the sync is fine and only the subscription is missing. (A 401 means
+the access token expired — click **Sync now**, then re-run.) Note that a `calendarList` request will
+always fail here: it is outside the scope, by design.
+
+**Fewer deadlines than expected**
+Submitted and past-due assignments are filtered out by default. Turn both filters off in Options to
+see everything, or check per-course toggles.
 
 ## Settings
 
