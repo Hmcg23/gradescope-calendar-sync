@@ -21,6 +21,11 @@ async function render() {
         ? 'none'
         : String(state.settings.reminderMinutes);
 
+  if (state.calendarId) {
+    $('calIdBlock').hidden = false;
+    $('calId').textContent = state.calendarId;
+  }
+
   const box = $('courses');
   box.textContent = '';
   if (!state.courses.length) {
@@ -66,6 +71,11 @@ $('reminderMinutes').addEventListener('change', async () => {
   const raw = $('reminderMinutes').value;
   await updateSettings({ reminderMinutes: raw === '' ? null : raw === 'none' ? false : Number(raw) });
   flash('Saved — applies on the next sync');
+});
+
+$('copyCalId').addEventListener('click', async () => {
+  await navigator.clipboard.writeText($('calId').textContent);
+  flash('Calendar ID copied');
 });
 
 $('reset').addEventListener('click', async () => {

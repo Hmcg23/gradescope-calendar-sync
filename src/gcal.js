@@ -240,18 +240,26 @@ export async function ensureCalendar({ calendarId, name, timeZone, interactive =
     body: { summary: name, description: 'Assignment deadlines synced from Gradescope.', timeZone },
   });
 
-  // Colour it so it is visually distinct in the sidebar. Non-fatal if it fails.
+  // Try to colour it and tick it visible in the sidebar. This normally fails: calendarList
+  // is outside the calendar.app.created scope, and widening the scope to reach it would hand
+  // us read/write on every calendar the user owns. So the calendar is created and written to,
+  // but the user has to subscribe to it once by id — the options page shows them how.
+  let listed = true;
   try {
     await call(`/users/me/calendarList/${encodeURIComponent(cal.id)}`, {
       method: 'PATCH',
       interactive,
       body: { colorId: '9', selected: true },
     });
-  } catch {
-    /* cosmetic only */
+  } catch (e) {
+    listed = false;
+    console.info(
+      '[gs-sync] could not auto-show the calendar (expected with the narrow scope):',
+      e.message,
+    );
   }
 
-  return { calendarId: cal.id, timeZone: cal.timeZone || timeZone, created: true };
+  return { calendarId: cal.id, timeZone: cal.timeZone || timeZone, created: true, listed };
 }
 
 /** Upsert by deterministic id: update first (the common case), insert if it is not there yet. */

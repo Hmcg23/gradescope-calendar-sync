@@ -42,6 +42,16 @@
     <h2>Calendar</h2>
     <label class="row"><span>Calendar name <input type="text" id="calendarName" /><p class="hint">Only used when the calendar is first created.</p></span></label>
 
+    <div id="calIdBlock" hidden>
+      <p class="hint">
+        Not seeing the calendar in Google Calendar? It exists and is being written to, but this
+        extension deliberately holds a narrow permission that cannot tick calendars visible for you.
+        Subscribe to it once: Google Calendar → <strong>Other calendars</strong> → <strong>+</strong>
+        → <strong>Subscribe to calendar</strong> → paste this ID.
+      </p>
+      <p><code id="calId"></code> <button id="copyCalId" class="link" type="button">Copy</button></p>
+    </div>
+
     <h2>Troubleshooting</h2>
     <label class="row"><input type="checkbox" id="dryRun" /><span>Dry run<p class="hint">Log what would change to the service worker console without writing anything.</p></span></label>
     <label class="row"><input type="checkbox" id="debugDumpHtml" /><span>Dump scraped HTML to the console<p class="hint">Use this to capture fresh test fixtures if Gradescope changes its markup.</p></span></label>

@@ -115,8 +115,16 @@ Confirm the ID shown matches step 1.
 
 Click the toolbar icon → **Connect Google Calendar** → consent → **Sync now**.
 
-A new **Gradescope** calendar appears in Google Calendar's sidebar, separate from your primary
-calendar and independently toggleable.
+This creates a **Gradescope** calendar and writes your deadlines into it.
+
+**You then have to subscribe to it once.** The `calendar.app.created` scope lets the extension
+create and fill its own calendar, but not touch your calendar list, so it cannot tick itself
+visible — and widening the scope far enough to do that would grant read/write on every calendar you
+own. Not a trade worth making for one click.
+
+Open the extension's Options page, copy the calendar ID shown under **Calendar**, then in Google
+Calendar: **Other calendars → + → Subscribe to calendar** → paste the ID. It stays visible from then
+on, separate from your primary calendar and independently toggleable.
 
 ## Settings
 
